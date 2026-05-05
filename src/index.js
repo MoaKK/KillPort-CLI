@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-import { execSync } from 'child_process';
 import * as readline from 'readline';
+import { getProcessOnPort, killProcess } from './port.js';
 
 const args = process.argv.slice(2);
 const ports = args.filter(a => !a.startsWith('--'));
@@ -12,33 +12,6 @@ if (ports.length === 0) {
   process.exit(1);
 }
 
-function getProcessOnPort(port) {
-  try {
-    const output = execSync(`lsof -i :${port} -n -P`, { encoding: 'utf8' });
-    const lines = output.trim().split('\n').filter(l => l.trim());
-    if (lines.length < 2) return null;
-
-    const parts = lines[1].split(/\s+/);
-    const pid = parts[1];
-
-    let command = parts[0];
-    try {
-      command = execSync(`ps -p ${pid} -o command=`, { encoding: 'utf8' }).trim();
-    } catch {
-      // fallback to lsof name if ps fails
-    }
-
-    return {
-      name: parts[0],
-      pid,
-      user: parts[2],
-      command,
-    };
-  } catch {
-    return null;
-  }
-}
-
 function ask(question) {
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
   return new Promise((resolve) => {
@@ -47,26 +20,6 @@ function ask(question) {
       resolve(answer.trim().toLowerCase());
     });
   });
-}
-
-function killProcess(pid) {
-  try {
-    execSync(`kill -15 ${pid}`);
-
-    const deadline = Date.now() + 2000;
-    while (Date.now() < deadline) {
-      try {
-        execSync(`kill -0 ${pid}`, { stdio: 'ignore' });
-      } catch {
-        return 'sigterm';
-      }
-    }
-
-    execSync(`kill -9 ${pid}`);
-    return 'sigkill';
-  } catch {
-    return 'failed';
-  }
 }
 
 for (const port of ports) {
