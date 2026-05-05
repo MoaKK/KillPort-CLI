@@ -1,6 +1,6 @@
 {
   "name": "@moakk/killport-cli",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Detects what's running on a port and offers to kill it",
   "main": "src/index.js",
   "type": "module",
