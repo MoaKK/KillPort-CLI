@@ -5,12 +5,21 @@
   "main": "src/index.js",
   "type": "module",
   "bin": {
-    "killport": "./src/index.js"
+    "killport": "src/index.js"
   },
   "scripts": {
     "start": "node src/index.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC"
+  "keywords": [
+    "port",
+    "kill",
+    "cli",
+    "lsof",
+    "process"
+  ],
+  "author": "Sohaib",
+  "license": "ISC",
+  "engines": {
+    "node": ">=16"
+  }
 }
