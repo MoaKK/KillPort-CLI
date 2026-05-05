@@ -1,0 +1,16 @@
+{
+  "name": "killport-cli",
+  "version": "1.0.0",
+  "description": "Detects what's running on a port and offers to kill it",
+  "main": "src/index.js",
+  "type": "module",
+  "bin": {
+    "killport": "./src/index.js"
+  },
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
