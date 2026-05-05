@@ -19,10 +19,20 @@ function getProcessOnPort(port) {
     if (lines.length < 2) return null;
 
     const parts = lines[1].split(/\s+/);
+    const pid = parts[1];
+
+    let command = parts[0];
+    try {
+      command = execSync(`ps -p ${pid} -o command=`, { encoding: 'utf8' }).trim();
+    } catch {
+      // fallback to lsof name if ps fails
+    }
+
     return {
       name: parts[0],
-      pid: parts[1],
+      pid,
       user: parts[2],
+      command,
     };
   } catch {
     return null;
@@ -71,6 +81,7 @@ for (const port of ports) {
   console.log(`  Process : ${proc.name}`);
   console.log(`  PID     : ${proc.pid}`);
   console.log(`  User    : ${proc.user}`);
+  console.log(`  Command : ${proc.command}`);
 
   if (!force) {
     const answer = await ask('\nKill it? [y/N] ');
