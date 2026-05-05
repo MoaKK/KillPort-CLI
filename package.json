@@ -1,16 +1,25 @@
 {
-  "name": "killport-cli",
-  "version": "1.0.0",
+  "name": "@moakk/killport-cli",
+  "version": "1.0.1",
   "description": "Detects what's running on a port and offers to kill it",
   "main": "src/index.js",
   "type": "module",
   "bin": {
-    "killport": "./src/index.js"
+    "killport": "src/index.js"
   },
   "scripts": {
     "start": "node src/index.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC"
+  "keywords": [
+    "port",
+    "kill",
+    "cli",
+    "lsof",
+    "process"
+  ],
+  "author": "Sohaib",
+  "license": "ISC",
+  "engines": {
+    "node": ">=16"
+  }
 }
