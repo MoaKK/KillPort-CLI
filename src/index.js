@@ -3,18 +3,18 @@
 import { execSync } from 'child_process';
 import * as readline from 'readline';
 
-const port = process.argv[2];
+const args = process.argv.slice(2);
+const port = args.find(a => !a.startsWith('--'));
+const force = args.includes('--force');
 
 if (!port) {
-  console.error('Usage: killport <port>');
+  console.error('Usage: killport <port> [--force]');
   process.exit(1);
 }
 
 function getProcessOnPort(port) {
   try {
-    const output = execSync(`lsof -i :${port} -n -P`, {
-      encoding: 'utf8',
-    });
+    const output = execSync(`lsof -i :${port} -n -P`, { encoding: 'utf8' });
     const lines = output.trim().split('\n').filter(l => l.trim());
     if (lines.length < 2) return null;
 
@@ -29,7 +29,6 @@ function getProcessOnPort(port) {
   }
 }
 
-
 function ask(question) {
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
   return new Promise((resolve) => {
@@ -43,9 +42,21 @@ function ask(question) {
 function killProcess(pid) {
   try {
     execSync(`kill -15 ${pid}`);
-    return true;
+
+    // Wait up to 2s for the process to exit, then SIGKILL
+    const deadline = Date.now() + 2000;
+    while (Date.now() < deadline) {
+      try {
+        execSync(`kill -0 ${pid}`, { stdio: 'ignore' }); // still alive
+      } catch {
+        return 'sigterm'; // process is gone
+      }
+    }
+
+    execSync(`kill -9 ${pid}`);
+    return 'sigkill';
   } catch {
-    return false;
+    return 'failed';
   }
 }
 
@@ -61,16 +72,20 @@ console.log(`  Process : ${proc.name}`);
 console.log(`  PID     : ${proc.pid}`);
 console.log(`  User    : ${proc.user}`);
 
-const answer = await ask('\nKill it? [y/N] ');
-
-if (answer !== 'y') {
-  console.log('Aborted.');
-  process.exit(0);
+if (!force) {
+  const answer = await ask('\nKill it? [y/N] ');
+  if (answer !== 'y') {
+    console.log('Aborted.');
+    process.exit(0);
+  }
 }
 
-const killed = killProcess(proc.pid);
-if (killed) {
+const result = killProcess(proc.pid);
+
+if (result === 'sigterm') {
   console.log(`Process ${proc.pid} (${proc.name}) terminated.`);
+} else if (result === 'sigkill') {
+  console.log(`Process ${proc.pid} (${proc.name}) force-killed.`);
 } else {
   console.error(`Failed to kill ${proc.pid}. Try running with sudo.`);
   process.exit(1);
